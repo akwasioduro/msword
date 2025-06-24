@@ -9,7 +9,7 @@ on:
 
 jobs:
   trivy-scan:
-    name: Trivy Source Code Scan
+    name: Trivy Full Security Scan
     runs-on: ubuntu-latest
 
     steps:
@@ -25,5 +25,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install trivy -y
 
-      - name: Run Trivy Scan on Source Code
-        run: trivy fs --exit-code 1 --severity HIGH,CRITICAL .
+      - name: Run Trivy Scan (log + fail on any threat)
+        run: |
+          trivy fs --exit-code 1 \
+                   --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+                   --format table \
+                   --output trivy-results.txt .
+
+      - name: Show Trivy Results in Logs
+        run: cat trivy-results.txt
+
+      - name: Upload Trivy Report (optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-scan-report
+          path: trivy-results.txt
